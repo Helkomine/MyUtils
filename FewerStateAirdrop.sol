@@ -53,12 +53,12 @@ contract FewerStateAirdrop is ReentrancyGuardTransient {
 
     function _isNullifierExist(uint256 nullifier) private view returns (bool isExist) {
         uint256 bitmapNullifier = bitmapNullifiers[nullifier >> 8];
-        isExist = (bitmapNullifier & (1 << (uint256(uint8(nullifier))))) != 0;
+        isExist = (bitmapNullifier & (1 << (uint8(nullifier)))) != 0;
     }
 
     function _markNullifierExist(uint256 nullifier) private {
         uint256 bitmapNullifier = bitmapNullifiers[nullifier >> 8];
-        bitmapNullifiers[nullifier >> 8] = bitmapNullifier | (1 << (uint256(uint8(nullifier))));
+        bitmapNullifiers[nullifier >> 8] = bitmapNullifier | (1 << (uint8(nullifier)));
     }
 
     function _cashout(Claimer[100] calldata claimer) private {
