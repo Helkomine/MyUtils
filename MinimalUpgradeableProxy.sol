@@ -12,9 +12,8 @@ contract MinimalUpgradeableProxy {
 
     fallback() external payable {
         assembly {
-            let proxy := sload(PROXY_SLOT)
             calldatacopy(0, 0, calldatasize())
-            let success := delegatecall(gas(), proxy, 0, calldatasize(), 0, 0)
+            let success := delegatecall(gas(), sload(PROXY_SLOT), 0, calldatasize(), 0, 0)
             returndatacopy(0, 0, returndatasize())
             switch success
             case 0 {
