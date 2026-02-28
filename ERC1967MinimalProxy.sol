@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.0;
 
-contract ERC7229Proxy {
-    // keccak256(abi.encode(uint256(keccak256("erc7229.proxy.implementation")) - 1)) & ~bytes32(uint256(0xff))
-    bytes32 private constant IMPLEMENTATION_SLOT = 0x571b02ca7aebc754e10140b3ef397ce5bab4701ec2fc4aa59de50ca8613f9200;
+contract ERC1967MinimalProxy {
+    bytes32 private constant IMPLEMENTATION_SLOT = 0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc;
 
     constructor(address implementation) payable {
         assembly {
