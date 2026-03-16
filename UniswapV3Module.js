@@ -57,7 +57,7 @@ contract UniswapModule is IUniswapV3SwapCallback {
         }
 
         assembly ("memory-safe") {
-        
+            
         }
     }
 }
