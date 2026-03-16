@@ -24,7 +24,7 @@ contract UniswapModule is IUniswapV3SwapCallback {
         uint256 amount;
         
         assembly {
-            amount := calldataload()
+            amount := calldataload(sub(36, shl(5, zeroForOne)))
         }
 
         IERC20(tokenIn).safeTransfer(msg.sender, amount);
