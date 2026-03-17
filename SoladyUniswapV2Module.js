@@ -5,7 +5,17 @@ abstract contract UniswapV2Module {
     function _balanceOf(IERC20 token, address viewer) internal virtual returns (uint256) {
         uint256 balance;
         assembly {
-          
+            let pointer := mload(0x40)
+
+            mstore(pointer, 0x..)
+            mstore(add(pointer, 0x20), viewer)
+
+            if or(iszero(staticcall(gas(), token, add(pointer, 0x1c), 0x24, 0, 0)), sub(returndatasize(), 0x20)) {
+                revert(0, 0)
+            }
+
+            returndatacopy(pointer, 0, 0x20)
+            balance := mload(pointer)
         }
         
         return balance;
@@ -33,14 +43,7 @@ abstract contract UniswapV2Module {
             bytes memory factories = FACTORIES_PACKED;
 
             assembly {
-                factory := shr(
-                    mload(
-                        add(
-                            mul(
-                                factoryId,
-                                20
-                            ),
-                            add(
+                factory := shr(mload(add(mul(factoryId, 20), add(
                                 data,
                                 32
                             )
