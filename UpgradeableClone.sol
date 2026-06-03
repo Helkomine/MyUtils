@@ -227,19 +227,65 @@ library UpgradeableClone {
     }
 
     /**
-     * @dev Deploys and returns the address of a clone that mimics the behavior of `implementation`.
+     * @dev Computes the address of a clone deployed using {Clones-cloneDeterministicWithImmutableArgs}.
+     */
+    function predictDeterministicAddressWithImmutableArgs(
+        address implementation,
+        bytes memory args,
+        bytes32 salt,
+        address deployer
+    ) internal pure returns (address predicted) {
+        bytes memory bytecode = _cloneCodeWithImmutableArgs(implementation, args);
+
+        return Create2.computeAddress(salt, keccak256(bytecode), deployer);
+    }
+
+    /**
+     * @dev Computes the address of a clone deployed using {Clones-cloneDeterministicWithImmutableArgs}.
+     */
+    function predictDeterministicAddressWithImmutableArgs(
+        address implementation,
+        bytes memory args,
+        bytes32 salt
+    ) internal view returns (address predicted) {
+        return predictDeterministicAddressWithImmutableArgs(implementation, args, salt, address(this));
+    }
+
+    /**
+     * @dev Get the immutable args attached to a clone.
      *
-     * This function uses the create opcode, which should never revert.
+     * - If `instance` is a clone that was deployed using `clone` or `cloneDeterministic`, this
+     *   function will return an empty array.
+     * - If `instance` is a clone that was deployed using `cloneWithImmutableArgs` or
+     *   `cloneDeterministicWithImmutableArgs`, this function will return the args array used at
+     *   creation.
+     * - If `instance` is NOT a clone deployed using this library, the behavior is undefined. This
+     *   function should only be used to check addresses that are known to be clones.
+     */
+    function fetchCloneArgs(address instance) internal view returns (bytes memory) {
+        bytes memory result = new bytes(instance.code.length - 0x3a); // revert if length is too short
+
+        assembly ("memory-safe") {
+            extcodecopy(instance, add(result, 0x20), 0x3a, mload(result))
+        }
+
+        return result;
+    }
+
+    /**
+     * @dev Helper that prepares the initcode of the proxy with immutable args.
      *
-     * WARNING: This function does not check if `implementation` has code. A clone that points to an address
-     * without code cannot be initialized. Initialization calls may appear to be successful when, in reality, they
-     * have no effect and leave the clone uninitialized, allowing a third party to initialize it later.
+     * An assembly variant of this function requires copying the `args` array, which can be efficiently done using
+     * `mcopy`. Unfortunately, that opcode is not available before cancun. A pure solidity implementation using
+     * abi.encodePacked is more expensive but also more portable and easier to review.
+     *
+     * NOTE: https://eips.ethereum.org/EIPS/eip-7954[EIP-7954] limits the length of the contract code to 65536 bytes.
+     * With the proxy code taking 58 bytes, that limits the length of the immutable args to 65478 bytes.
      */
     function _cloneCodeWithImmutableArgs(
         address implementation,
         bytes memory args
     ) private pure returns (bytes memory) {
-        // Lưu ý rằng kích thước mã runtime tối đa sẽ tăng lên 64KB sau khi EIP-7954 được đưa vào
         if (args.length > 0xffc6) revert CloneArgumentsTooLong();
 
         bytes memory rawInitcode = RAW_INITCODE;
@@ -249,7 +295,7 @@ library UpgradeableClone {
 
             let offset := add(rawInitcode, 32)
 
-            mstore(offset, or(shr(16, shl(16, mload(offset))), shl(240, offset)))
+            mstore(offset, or(shr(16, shl(16, mload(offset))), shl(240, length)))
 
             mstore8(add(offset, 4), 0x48)
 
@@ -266,5 +312,3 @@ library UpgradeableClone {
             );
     }
 }
-
-
