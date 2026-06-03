@@ -252,6 +252,10 @@ library UpgradeableClone {
             mstore(offset, or(shr(16, shl(16, mload(offset))), shl(240, offset)))
 
             mstore8(add(offset, 4), 0x48)
+
+            offset := add(rawInitcode, 40)
+
+            mstore(offset, or(shl(96, implementation), mload(offset)))
         }
 
         return
